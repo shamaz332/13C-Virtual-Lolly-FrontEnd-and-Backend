@@ -1,0 +1,42 @@
+.result {
+    color: #fff;
+  }
+  .result > h4 {
+    text-align: center;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    font-style: italic;
+  }
+  .result > h3 {
+    color: #fa73d9;
+    margin-top: 0.5em;
+    padding: 0.5em 1em;
+    border: 1px solid rgba(43, 37, 37, 0.6);
+    background-color: rgba(43, 37, 37, 0.6);
+    text-align: center;
+    letter-spacing: 2px;
+    box-shadow: 0 0 10px rgba(43, 37, 37, 0.6);
+  }
+  .result__details {
+    padding: 1em 2em;
+    margin-bottom: 1.5em;
+    background-color: rgba(43, 37, 37, 0.6);
+    box-shadow: 0 0 10pxrgba(43, 37, 37, 0.6);
+    text-align: left;
+    font-style: italic;
+    font-size: 1.1em;
+    color: #fff;
+  }
+  .reciever {
+    font-family: Yellowtail, cursive;
+    font-size: 1.6em;
+    font-style: normal;
+    text-shadow:rgba(43, 37, 37, 0.6) 0 0 10px;
+  }
+  .sender {
+    font-family: Yellowtail, cursive;
+    font-size: 1.6em;
+    font-style: normal;
+    text-shadow:rgba(43, 37, 37, 0.6) 0 0 10px;
+    text-align: center;
+  }

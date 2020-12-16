@@ -1,0 +1,27 @@
+type Vlolly {
+    recipientName: String
+    message: String
+    senderName: String
+    flavourTop: String
+    flavourMiddle: String
+    flavourBottom: String
+    lollyPath: String
+  }
+
+input VlollyInput {
+     recipientName: String
+    message: String
+    senderName: String
+    flavourTop: String
+    flavourMiddle: String
+    flavourBottom: String
+    lollyPath: String
+}
+
+type Query {
+  listVlolly: [Vlolly]
+}
+type Mutation {
+  createVlolly(lolly: VlollyInput): Vlolly
+ 
+}
