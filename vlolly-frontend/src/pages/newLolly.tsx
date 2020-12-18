@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Header } from '../components/Header'
 import { Lolly } from '../components/lolly'
+import { createVlolly } from "../graphql/mutations"
+import shortid from "shortid"
+import { API } from "aws-amplify"
+import * as Yup from 'yup';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 export default function newLolly() {
 
   const [flavourTop, setFlavourTop] = useState("#ef0078")
@@ -10,6 +15,32 @@ export default function newLolly() {
   const [message, setMessage] = useState("")
   const [senderName, setSenderName] = useState("")
   const [loading, setLoading] = useState(false)
+
+    const addVlollyMutation = async () => {
+      setLoading(true)
+    try {
+      const lolly = {
+        id: shortid.generate(),
+        receiver: recipentName,
+        message: message,
+        sender: senderName,
+        top: flavourTop,
+        middle: flavourMiddle,
+        bottom: flavourEnd
+
+      }
+      const data = await API.graphql({
+        query: createVlolly,
+        variables: {
+          lolly: lolly,
+        },
+      })
+      setLoading(false)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
   return (
     <div className="container">
       <Header />
@@ -68,8 +99,8 @@ export default function newLolly() {
             onChange={e => setSenderName(e.target.value)}
           />
           <div className="formBtn-wrapper">
-            <button>
-             Freeze Lolly
+            <button  onClick={addVlollyMutation}>
+            {loading ? "freeze..." : "freeze"}
             </button>
           </div>
         </div>
