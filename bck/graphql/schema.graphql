@@ -1,0 +1,25 @@
+type Vlolly {
+  id: ID
+  receiver: String
+  message: String
+  sender: String
+  top: String
+  middle: String
+  bottom: String
+}
+
+input VlollyInput {
+  id: ID
+  receiver: String
+  message: String
+  sender: String
+  top: String
+  middle: String
+  bottom: String
+}
+type Query {
+  listVlolly: [Vlolly]
+}
+type Mutation {
+  createVlolly(lolly: VlollyInput): Vlolly
+}
