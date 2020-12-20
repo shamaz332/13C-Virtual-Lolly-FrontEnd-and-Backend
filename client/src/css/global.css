@@ -11,7 +11,7 @@ body {
   margin-right: auto;
 }
 
-.listLollies{
+.lollyFormDiv{
   display: flex;
   flex-direction: row;
   justify-content: center;

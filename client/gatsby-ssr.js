@@ -1,1 +1,1 @@
-export { default as wrapRootElement } from "./src/wrappers/wrap-root-element";
+export { default as wrapRootElement } from "./src/apollo/wrap-root-element";
