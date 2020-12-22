@@ -20,7 +20,7 @@ exports.createPages = async ({ graphql, actions }) => {
 
   data.lolly.listVlolly.forEach(node => {
     createPage({
-      path: `${node.link}`,
+      path: `${node.id}`,
       component: path.resolve("./src/templates/template.tsx"),
       context: {
         top: node.top,
