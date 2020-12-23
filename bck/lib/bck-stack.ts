@@ -163,7 +163,7 @@ export class BckLolly extends cdk.Stack {
           },
         },
         artifacts: {
-          "base-directory": "./public", ///outputting our generated Gatsby Build files to the public directory
+          "base-directory": "../../client/public", ///outputting our generated Gatsby Build files to the public directory
           files: ["*/*"],
         },
       }),
