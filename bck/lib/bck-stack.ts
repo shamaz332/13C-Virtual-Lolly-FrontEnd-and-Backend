@@ -5,7 +5,12 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as CodePipeline from "@aws-cdk/aws-codepipeline";
 import * as CodePipelineAction from "@aws-cdk/aws-codepipeline-actions";
 import * as CodeBuild from "@aws-cdk/aws-codebuild";
-import { Effect, PolicyStatement, Role, ServicePrincipal } from "@aws-cdk/aws-iam";
+import {
+  Effect,
+  PolicyStatement,
+  Role,
+  ServicePrincipal,
+} from "@aws-cdk/aws-iam";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as s3Deployment from "@aws-cdk/aws-s3-deployment";
 import * as cloudfront from "@aws-cdk/aws-cloudfront";
@@ -15,22 +20,29 @@ import * as origins from "@aws-cdk/aws-cloudfront-origins";
 import * as events from "@aws-cdk/aws-events";
 import * as targets from "@aws-cdk/aws-events-targets";
 
-
-export class BckStack extends cdk.Stack {
+export class BckLolly extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Creates the AppSync API
-    const api = new appsync.GraphqlApi(this, "Api", {
+
+           // 😀😀😀😀😀😀😀😀😀😀 Creates the AppSync API😀😀😀😀😀😀😀😀😀😀😀
+
+    const api = new appsync.GraphqlApi(this, "LollyApi", {
       name: "lolly",
       schema: appsync.Schema.fromAsset("graphql/schema.graphql"),
       authorizationConfig: {
         defaultAuthorization: {
           authorizationType: appsync.AuthorizationType.API_KEY,
+          apiKeyConfig: {
+            expires: cdk.Expiration.after(cdk.Duration.days(365)),
+          },
         },
       },
       xrayEnabled: true,
     });
+
+       // 😀😀😀😀😀😀😀😀😀😀 show to console😀😀😀😀😀😀😀😀😀😀😀
+
     // Prints out the AppSync GraphQL endpoint to the terminal
     new cdk.CfnOutput(this, "GraphQLAPIURL", {
       value: api.graphqlUrl,
@@ -45,12 +57,29 @@ export class BckStack extends cdk.Stack {
     new cdk.CfnOutput(this, "Stack Region", {
       value: this.region,
     });
+       // 😀😀😀😀😀😀😀😀😀😀 permession😀😀😀😀😀😀😀😀😀😀😀
 
-    const lollyLambda = new lambda.Function(this, "lollylambda", {
+
+    const role = new Role(this, "LambdaRoleForLolly", {
+      assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
+    });
+
+    const policy = new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: ["lambda:*", "codepipeline:*", "dynamodb:*", "logs:*"],
+      resources: ["*"],
+    });
+    role.addToPolicy(policy);
+
+
+       // 😀😀😀😀😀😀😀😀😀😀 lambda😀😀😀😀😀😀😀😀😀😀😀
+
+    const lollyLambda = new lambda.Function(this, "LollyFunc", {
       runtime: lambda.Runtime.NODEJS_12_X,
       handler: "main.handler",
       code: lambda.Code.fromAsset("functions"),
       memorySize: 1024,
+      role: role,
     });
 
     // Set the new Lambda function as a data source for the AppSync API
@@ -69,7 +98,7 @@ export class BckStack extends cdk.Stack {
       fieldName: "createVlolly",
     });
 
-    const lollyTable = new ddb.Table(this, "CDKlolly", {
+    const lollyTable = new ddb.Table(this, "LollyTable", {
       billingMode: ddb.BillingMode.PAY_PER_REQUEST,
       partitionKey: {
         name: "id",
@@ -81,39 +110,43 @@ export class BckStack extends cdk.Stack {
 
     // Create an environment variable that we will use in the function code
     lollyLambda.addEnvironment("LOLLY_TABLE", lollyTable.tableName);
-  
-  
+
     // CI CD pipeline code
-    //Deploy Gatsby on s3 bucket
+
+
+
+   // 😀😀😀😀😀😀😀😀😀😀 Deploy Gatsby on s3 bucket😀😀😀😀😀😀😀😀😀😀😀
+
+ 
     const myBucket = new s3.Bucket(this, "lollybucket", {
       versioned: true,
       websiteIndexDocument: "index.html",
-      publicReadAccess:true
+      publicReadAccess: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+
     });
     myBucket.grantReadWrite(lollyLambda);
 
-    const dist = new cloudfront.Distribution(this, "myDistribution", {
-      defaultBehavior: { origin: new origins.S3Origin(myBucket) },
-      enableIpv6:true,
-      
+    const dist = new cloudfront.Distribution(this, "LollyDistribution", {
+      defaultBehavior: {
+        origin: new origins.S3Origin(myBucket),
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+        
+      },
+      enableIpv6: true,
     });
 
-    new s3Deployment.BucketDeployment(this, "deployStaticWebsite", {
+    new s3Deployment.BucketDeployment(this, "deploylolly", {
       sources: [s3Deployment.Source.asset("../client/public")],
       destinationBucket: myBucket,
       distribution: dist,
-
+      prune: false,
+      
+      
     });
     new cdk.CfnOutput(this, "CloudFrontURL", {
       value: dist.domainName,
     });
-
-    // Artifact from source stage
-    const sourceOutput = new CodePipeline.Artifact();
-
-    // Artifact from build stage
-    const S3Output = new CodePipeline.Artifact();
-
     //Code build action, Here you will define a complete build
     const s3Build = new CodeBuild.PipelineProject(this, "s3Build", {
       buildSpec: CodeBuild.BuildSpec.fromObject({
@@ -126,48 +159,49 @@ export class BckStack extends cdk.Stack {
             commands: ["cd client", "npm i -g gatsby", "npm install"],
           },
           build: {
-            commands: ["gatsby build"],
+            commands: ["gatsby build", "ls"],
           },
         },
         artifacts: {
-          "base-directory": "./client/public", ///outputting our generated Gatsby Build files to the public directory
-          files: ["**/*"],
+          "base-directory": "./public", ///outputting our generated Gatsby Build files to the public directory
+          files: ["*/*"],
         },
       }),
       environment: {
         buildImage: CodeBuild.LinuxBuildImage.STANDARD_3_0, ///BuildImage version 3 because we are using nodejs environment 12
       },
     });
+   // 😀😀😀😀😀😀😀😀😀😀Artifact😀😀😀😀😀😀😀😀😀😀😀
+   
+    // Artifact from source stage
+    const sourceOutput = new CodePipeline.Artifact();
 
-    const policy = new PolicyStatement();
-    policy.addActions("s3:*");
-    policy.addResources("*");
-    s3Build.addToRolePolicy(policy);
-    const lmb = new PolicyStatement({
+    // Artifact from build stage
+    const S3Output = new CodePipeline.Artifact();
+   // 😀😀😀😀😀😀😀😀😀😀Permessions😀😀😀😀😀😀😀😀😀😀😀
+
+    const secondPolicy = new PolicyStatement({
       effect: Effect.ALLOW,
-      actions: ['lollyLambda:*', "*"],
-      resources: ['*']
-    })
-    ///Define a pipeline
-
-
-    const role = new Role(this, 'Role', {
-      assumedBy: new ServicePrincipal('codepipeline.amazonaws.com'),
-      // custom description if desired
-      description: 'This is a custom role...',
+      actions: ["s3:*", "lambda:*", "codepipeline:*"],
+      resources: ["*"],
     });
-    role.addToPolicy(lmb)
+    s3Build.addToRolePolicy(secondPolicy);
 
-    const pipeline = new CodePipeline.Pipeline(this, "GatsbyPipeline", {
+
+   // 😀😀😀😀😀😀😀😀😀😀Pipiline Creation😀😀😀😀😀😀😀😀😀😀😀
+
+
+    const pipeline = new CodePipeline.Pipeline(this, "LollyPipeline", {
       crossAccountKeys: false, //Pipeline construct creates an AWS Key Management Service (AWS KMS) which cost $1/month. this will save your $1.
       restartExecutionOnUpdate: true, //Indicates whether to rerun the AWS CodePipeline pipeline after you update it.
-      role:role
     });
 
-    
-    ///Adding stages to pipeline
+
+   // 😀😀😀😀😀😀😀😀😀😀Add steges to pipiline😀😀😀😀😀😀😀😀😀😀😀
 
     //First Stage Source
+ 
+    
     pipeline.addStage({
       stageName: "Source",
       actions: [
@@ -204,28 +238,21 @@ export class BckStack extends cdk.Stack {
       ],
     });
 
-    // adding eventbridge to start build 
 
-
-    
-    const bus = new events.EventBus(this,'lollyEventBus',{
+   // 😀😀😀😀😀😀😀😀😀adding eventbridge to start build😀😀😀😀😀😀😀😀😀😀😀😀
+    const bus = new events.EventBus(this, "lollyEventBus", {
       eventBusName: "LollyBus",
-    })
+    });
 
     const rule = new events.Rule(this, "lollyRule", {
       description: "description",
       eventPattern: {
-      source:["lollusource"],
-      detailType:["lollusource"],
-      detail:[
-        "lolly"
-      ]
-
+        source: ["lollusource"],
+        detailType: ["lollusource"],
+        detail: ["lolly"],
       },
       eventBus: bus,
-    
-    
     });
-    rule.addTarget(new targets.CodePipeline(pipeline));
+    rule.addTarget(new targets.CodeBuildProject(s3Build));
   }
 }

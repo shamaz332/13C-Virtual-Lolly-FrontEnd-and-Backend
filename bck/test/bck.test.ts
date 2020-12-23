@@ -5,7 +5,7 @@ import * as Bck from '../lib/bck-stack';
 test('Empty Stack', () => {
     const app = new cdk.App();
     // WHEN
-    const stack = new Bck.BckStack(app, 'MyTestStack');
+    const stack = new Bck.BckLolly(app, 'MyTestStack');
     // THEN
     expectCDK(stack).to(matchTemplate({
       "Resources": {}

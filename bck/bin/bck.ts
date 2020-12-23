@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
-import { BckStack } from '../lib/bck-stack';
+import { BckLolly } from '../lib/bck-stack';
 
 const app = new cdk.App();
-new BckStack(app, 'BckStack');
+new BckLolly(app, 'BckStack');
