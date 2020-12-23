@@ -1,6 +1,7 @@
 const AWS = require("aws-sdk");
 const docClient = new AWS.DynamoDB.DocumentClient();
-const eventBridge = new AWS.EventBridge();
+// const eventBridge = new AWS.EventBridge();
+const codepipeline = new AWS.CodePipeline();
 import Lolly from "./type";
 
 async function createVlolly(lolly: Lolly) {
@@ -8,20 +9,23 @@ async function createVlolly(lolly: Lolly) {
     TableName: process.env.LOLLY_TABLE,
     Item: lolly,
   };
+
+  var Pipparams = {
+    name: "BckStack-LollyPipeline196A152A-19R4CFA54XIQC",
+    
+  };
+
   try {
     await docClient.put(params).promise();
-    await eventBridge
-      .putEvents({
-        Entries: [
-          {
-            EventBusName: "LollyBus",
-            Source: "lollusource",
-            DetailType: "newlolly",
-            Detail: `{ "lollyData": "${lolly}" }`,
-          },
-        ],
-      })
-      .promise();
+    await codepipeline
+    .startPipelineExecution(Pipparams, function (err: any, data: any) {
+      if (err) {
+        console.log(err, err.stack);
+      } else {
+        console.log(data);
+      }
+    })
+    .promise();
     return lolly;
   } catch (err) {
     console.log("DynamoDB error: ", err);

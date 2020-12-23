@@ -240,19 +240,19 @@ export class BckLolly extends cdk.Stack {
 
 
    // 😀😀😀😀😀😀😀😀😀adding eventbridge to start build😀😀😀😀😀😀😀😀😀😀😀😀
-    const bus = new events.EventBus(this, "lollyEventBus", {
-      eventBusName: "LollyBus",
-    });
+    // const bus = new events.EventBus(this, "lollyEventBus", {
+    //   eventBusName: "LollyBus",
+    // });
 
-    const rule = new events.Rule(this, "lollyRule", {
-      description: "description",
-      eventPattern: {
-        source: ["lollusource"],
-        detailType: ["lollusource"],
-        detail: ["lolly"],
-      },
-      eventBus: bus,
-    });
-    rule.addTarget(new targets.CodeBuildProject(s3Build));
+    // const rule = new events.Rule(this, "lollyRule", {
+    //   description: "description",
+    //   eventPattern: {
+    //     source: ["lollusource"],
+    //     detailType: ["lollusource"],
+    //     detail: ["lolly"],
+    //   },
+    //   eventBus: bus,
+    // });
+    // rule.addTarget(new targets.CodeBuildProject(s3Build));
   }
 }
