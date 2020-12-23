@@ -5,11 +5,16 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as CodePipeline from "@aws-cdk/aws-codepipeline";
 import * as CodePipelineAction from "@aws-cdk/aws-codepipeline-actions";
 import * as CodeBuild from "@aws-cdk/aws-codebuild";
-import { PolicyStatement } from "@aws-cdk/aws-iam";
+import { Effect, PolicyStatement, Role, ServicePrincipal } from "@aws-cdk/aws-iam";
 import * as s3 from "@aws-cdk/aws-s3";
 import * as s3Deployment from "@aws-cdk/aws-s3-deployment";
 import * as cloudfront from "@aws-cdk/aws-cloudfront";
 import * as origins from "@aws-cdk/aws-cloudfront-origins";
+
+// event bridge
+import * as events from "@aws-cdk/aws-events";
+import * as targets from "@aws-cdk/aws-events-targets";
+
 
 export class BckStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -76,21 +81,28 @@ export class BckStack extends cdk.Stack {
 
     // Create an environment variable that we will use in the function code
     lollyLambda.addEnvironment("LOLLY_TABLE", lollyTable.tableName);
-
+  
+  
     // CI CD pipeline code
     //Deploy Gatsby on s3 bucket
     const myBucket = new s3.Bucket(this, "lollybucket", {
       versioned: true,
       websiteIndexDocument: "index.html",
+      publicReadAccess:true
     });
+    myBucket.grantReadWrite(lollyLambda);
+
     const dist = new cloudfront.Distribution(this, "myDistribution", {
       defaultBehavior: { origin: new origins.S3Origin(myBucket) },
+      enableIpv6:true,
+      
     });
 
     new s3Deployment.BucketDeployment(this, "deployStaticWebsite", {
       sources: [s3Deployment.Source.asset("../client/public")],
       destinationBucket: myBucket,
       distribution: dist,
+
     });
     new cdk.CfnOutput(this, "CloudFrontURL", {
       value: dist.domainName,
@@ -111,20 +123,14 @@ export class BckStack extends cdk.Stack {
             "runtime-versions": {
               nodejs: 12,
             },
-            commands: [
-              
-              "cd client",
-              "npm i -g gatsby",
-              "npm install",
-            ],
+            commands: ["cd client", "npm i -g gatsby", "npm install"],
           },
           build: {
             commands: ["gatsby build"],
           },
         },
         artifacts: {
-          "base-directory":
-            "./client/public", ///outputting our generated Gatsby Build files to the public directory
+          "base-directory": "./client/public", ///outputting our generated Gatsby Build files to the public directory
           files: ["**/*"],
         },
       }),
@@ -137,13 +143,28 @@ export class BckStack extends cdk.Stack {
     policy.addActions("s3:*");
     policy.addResources("*");
     s3Build.addToRolePolicy(policy);
-
+    const lmb = new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: ['lollyLambda:*', "*"],
+      resources: ['*']
+    })
     ///Define a pipeline
+
+
+    const role = new Role(this, 'Role', {
+      assumedBy: new ServicePrincipal('codepipeline.amazonaws.com'),
+      // custom description if desired
+      description: 'This is a custom role...',
+    });
+    role.addToPolicy(lmb)
+
     const pipeline = new CodePipeline.Pipeline(this, "GatsbyPipeline", {
       crossAccountKeys: false, //Pipeline construct creates an AWS Key Management Service (AWS KMS) which cost $1/month. this will save your $1.
       restartExecutionOnUpdate: true, //Indicates whether to rerun the AWS CodePipeline pipeline after you update it.
+      role:role
     });
 
+    
     ///Adding stages to pipeline
 
     //First Stage Source
@@ -183,9 +204,28 @@ export class BckStack extends cdk.Stack {
       ],
     });
 
+    // adding eventbridge to start build 
+
 
     
+    const bus = new events.EventBus(this,'lollyEventBus',{
+      eventBusName: "LollyBus",
+    })
 
+    const rule = new events.Rule(this, "lollyRule", {
+      description: "description",
+      eventPattern: {
+      source:["lollusource"],
+      detailType:["lollusource"],
+      detail:[
+        "lolly"
+      ]
 
+      },
+      eventBus: bus,
+    
+    
+    });
+    rule.addTarget(new targets.CodePipeline(pipeline));
   }
 }

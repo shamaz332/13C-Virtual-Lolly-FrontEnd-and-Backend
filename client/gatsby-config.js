@@ -8,9 +8,9 @@ module.exports = {
               // This is the field under which it's accessible
               fieldName: "lolly",
               // URL to query from
-              url: "https://bsthvhlkd5ey5jqjnwwxoqrb44.appsync-api.us-east-1.amazonaws.com/graphql",
+              url: "https://iv4zwyjstvaetkucidopd6wtna.appsync-api.us-east-1.amazonaws.com/graphql",
               headers: {
-                  "x-api-key": "da2-57kpsil6ureetk5tvrohs22ge4"
+                  "x-api-key": "da2-dnucxpxmvvgw3frq27gde575lm"
               },
               refetchInterval: 10,
           },
