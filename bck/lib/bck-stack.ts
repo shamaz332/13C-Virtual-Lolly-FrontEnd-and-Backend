@@ -66,10 +66,12 @@ export class BckLolly extends cdk.Stack {
 
     const policy = new PolicyStatement({
       effect: Effect.ALLOW,
-      actions: ["lambda:*", "codepipeline:*", "dynamodb:*", "logs:*"],
+      actions: ["lambda:*", "codepipeline:*", "dynamodb:*", "logs:*","s3:*"],
       resources: ["*"],
     });
     role.addToPolicy(policy);
+
+
 
 
        // 😀😀😀😀😀😀😀😀😀😀 lambda😀😀😀😀😀😀😀😀😀😀😀
@@ -122,7 +124,6 @@ export class BckLolly extends cdk.Stack {
       versioned: true,
       websiteIndexDocument: "index.html",
       publicReadAccess: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
 
     });
     myBucket.grantReadWrite(lollyLambda);
@@ -130,7 +131,7 @@ export class BckLolly extends cdk.Stack {
     const dist = new cloudfront.Distribution(this, "LollyDistribution", {
       defaultBehavior: {
         origin: new origins.S3Origin(myBucket),
-        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+
         
       },
       enableIpv6: true,
@@ -140,7 +141,7 @@ export class BckLolly extends cdk.Stack {
       sources: [s3Deployment.Source.asset("../client/public")],
       destinationBucket: myBucket,
       distribution: dist,
-      prune: false,
+      // prune: false,
       
       
     });
@@ -180,13 +181,7 @@ export class BckLolly extends cdk.Stack {
     const S3Output = new CodePipeline.Artifact();
    // 😀😀😀😀😀😀😀😀😀😀Permessions😀😀😀😀😀😀😀😀😀😀😀
 
-    const secondPolicy = new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: ["s3:*", "lambda:*", "codepipeline:*"],
-      resources: ["*"],
-    });
-    s3Build.addToRolePolicy(secondPolicy);
-
+   s3Build.addToRolePolicy(policy);
 
    // 😀😀😀😀😀😀😀😀😀😀Pipiline Creation😀😀😀😀😀😀😀😀😀😀😀
 
